@@ -1,13 +1,9 @@
 import {Group, Text} from '@mantine/core';
-import {Logo} from '@/components/Common/Logo';
+import {Logo} from '@/components/common/Logo';
 import {
-  Icon2fa,
-  IconBellRinging,
+  IconDashboard,
   IconDatabaseImport,
-  IconFingerprint,
-  IconKey,
-  IconLogout,
-  IconReceipt2,
+  IconLogout, IconMessage, IconMessageChatbot,
   IconSettings,
   IconSwitchHorizontal, IconUsers,
 } from '@tabler/icons-react';
@@ -16,11 +12,10 @@ import {useAuth} from '@/auth/useAuth';
 import classes from './NavbarSimple.module.css';
 
 const data = [
-  {link: '/', label: 'Dashboard', icon: IconBellRinging},
-  {link: '/billing', label: 'Billing', icon: IconReceipt2},
-  {link: '/security', label: 'Security', icon: IconFingerprint},
-  {link: '/ssh', label: 'SSH Keys', icon: IconKey},
-  {link: '/databases', label: 'Databases', icon: IconDatabaseImport},
+  {link: '/', label: 'Dashboard', icon: IconDashboard},
+  {link: '/datasets', label: 'Datasets', icon: IconDatabaseImport},
+  {link: '/chats', label: 'Chats', icon: IconMessage},
+  {link: '/agents', label: 'Agent', icon: IconMessageChatbot},
   {link: '/users', label: 'Users', icon: IconUsers},
   {link: '/settings', label: 'Other Settings', icon: IconSettings},
 ];
@@ -61,6 +56,7 @@ export function NavbarSimple() {
         </a>
 
         <a
+          href="#"
           className={classes.link}
           onClick={(e) => {
             e.preventDefault();

@@ -1,7 +1,7 @@
-import { request } from '@/api/axios';
+import { request } from '@/api/request';
 import type { User } from './types';
-import { UserEndpoints } from '@/api/endpoints';
-import type {ApiResponse, PaginatedResponse} from "@/api/types.ts";
+import { USER_ENDPOINTS } from '@/api/endpoints';
+import type {Response, PaginatedContent} from "@/api/types";
 
 export const UserService = {
   list: async (
@@ -9,12 +9,11 @@ export const UserService = {
     page_size = 10,
     order_by?: string,
     desc_order?: boolean
-  ): Promise<PaginatedResponse<User>> => {
-    const res = await request.get<ApiResponse<PaginatedResponse<User>>>(
-      UserEndpoints.list,
+  ): Promise<PaginatedContent<User>> => {
+    const res = await request.get<Response<PaginatedContent<User>>>(
+      USER_ENDPOINTS.list,
       { params: { page, page_size, order_by, desc_order } }
     );
-    console.log(res.data);
     return res.data;
   },
 };

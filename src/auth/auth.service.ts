@@ -1,25 +1,25 @@
-import {request} from '@/api/axios';
+import {request} from '@/api/request';
 import type {LoginParams, LoginResponse, RegisterParams, RegisterResponse} from "@/auth/auth.types";
-import {AuthEndpoints} from "@/api/endpoints.ts";
+import {AUTH_ENDPOINTS} from "@/api/endpoints.ts";
 
 
 export const authService = {
   login(params: LoginParams) {
     return request.post<LoginResponse>(
-      AuthEndpoints.login,
+      AUTH_ENDPOINTS.login,
       params,
     );
   },
 
   logout() {
     return request.post<void>(
-      AuthEndpoints.logout,
+      AUTH_ENDPOINTS.logout,
     );
   },
 
   register(params: RegisterParams) {
     return request.post<RegisterResponse>(
-      AuthEndpoints.register,
+      AUTH_ENDPOINTS.register,
       params
     )
   }

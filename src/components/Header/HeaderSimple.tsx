@@ -1,5 +1,5 @@
 import {Burger, Container, Group, Text} from '@mantine/core';
-import { Logo } from '@/components/Common/Logo';
+import { Logo } from '@/components/common/Logo';
 import classes from './HeaderSimple.module.css';
 import {useState} from "react";
 

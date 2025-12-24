@@ -1,47 +1,34 @@
-import type {ReactNode} from "react";
-import {createContext, useState} from 'react';
-import type {LoginParams, LoginResponse} from "@/api/auth";
-import {AuthEndpoints} from "@/api/endpoints.ts";
-import {request} from "@/api/axios.ts";
+import {useEffect, useState} from 'react';
+import type {LoginParams, LoginResponse} from './auth.types';
+import {AUTH_ENDPOINTS} from '@/api/endpoints';
+import {onLogout} from './auth.events';
+import {AuthContext} from './authContext';
+import {request} from "@/api/request.ts";
+import {clearTokens, getToken, setRefreshToken, setToken} from "@/auth/auth.storage.ts";
+import type {Response} from "@/api/types.ts";
 
-interface AuthContextProps {
-  isAuthenticated: boolean;
-  login: (params: LoginParams) => Promise<void>;
-  logout: () => void;
-}
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!getToken());
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export function AuthProvider({children}: AuthProviderProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
-  // const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    return onLogout(() => setIsAuthenticated(false));
+  }, []);
 
   const login = async (params: LoginParams) => {
-    // setLoading(true);
-    try {
-      const data = await request.post<LoginResponse>(AuthEndpoints.login, params);
-      localStorage.setItem('token', data.access_token);
-      setIsAuthenticated(true);
-    } finally {
-      // setLoading(false);
-    }
+    const res = await request.post<Response<LoginResponse>>(AUTH_ENDPOINTS.login, params);
+    setToken(res.data.access_token);
+    setRefreshToken(res.data.refresh_token);
+    setIsAuthenticated(true);
   };
 
-
   const logout = () => {
-    localStorage.removeItem('token');
+    clearTokens();
     setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{isAuthenticated, login, logout}}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
-
-export {AuthContext};

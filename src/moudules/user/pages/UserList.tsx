@@ -1,22 +1,20 @@
-import {useState, useEffect, ReactNode} from 'react';
+import {useState} from 'react';
 import {
-  Anchor,
-  Avatar,
-  Breadcrumbs,
+  Avatar, Center,
   Checkbox,
-  Container,
-  Group,
+  Group, Loader,
   Pagination,
   ScrollArea,
   Table,
   Text
 } from '@mantine/core';
 import {useQuery} from '@tanstack/react-query';
-import {request} from '@/api/axios';
-import {UserEndpoints} from '@/api/endpoints'; // 假设这是你之前定义的接口
+import {request} from '@/api/request';
+import {USER_ENDPOINTS} from '@/api/endpoints'; // 假设这是你之前定义的接口
 import classes from './UserList.module.css';
 import cx from 'clsx';
-import {Link} from "react-router-dom";
+import {AppBreadcrumbs} from "@/components/common/AppBreadcrumbs.tsx";
+
 
 interface User {
   id: string;
@@ -52,85 +50,94 @@ export function UserListPage() {
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
     );
 
-  const toggleAll = () =>
-    setSelection((current) => (current.length === data?.data.items.length ? [] : data?.data.items.map((item) => item.id)));
+  // const toggleAll = (items: User[]) =>
+  //   setSelection((current) => (current.length === items.length ? [] : items.map((item) => item.id)));
 
 
   // 获取用户列表的查询函数
   const {data, isLoading} = useQuery<UserListResponse>({
     queryKey: ['users', page, pageSize, orderBy, descOrder],  // 使用 queryKey 作为数组
     queryFn: () =>
-      request.get(UserEndpoints.list, {
+      request.get(USER_ENDPOINTS.list, {
         params: {page, page_size: pageSize, order_by: orderBy, desc_order: descOrder},
       }),
   });
 
-  // 渲染用户列表
-  const rows = data?.data.items.map((item) => {
-    const selected = selection.includes(item.id);
-    return (
-      <Table.Tr key={item.id} className={cx({[classes.rowSelected]: selected})}>
-        <Table.Td>
-          <Checkbox checked={selection.includes(item.id)} onChange={() => toggleRow(item.id)}/>
-        </Table.Td>
-        <Table.Td>{item.id}</Table.Td>
-        <Table.Td>
-          <Group gap="sm">
-            <Avatar size={26} src={item.avatar} radius={26}/>
-            <Text size="sm" fw={500}>
-              {item.username}
-            </Text>
-          </Group>
-        </Table.Td>
-        <Table.Td>{item.email}</Table.Td>
-        <Table.Td>{item.job}</Table.Td>
-        <Table.Td>{item.created_at}</Table.Td>
-        <Table.Td>{item.updated_at}</Table.Td>
-      </Table.Tr>
-    );
-  });
+  const items = data?.data.items ?? [];
+  const total = data?.data.total ?? 0;
 
   return (
-    <>
-      <div style={{ marginBottom: '20px' }}>
-        <Breadcrumbs separatorMargin="md" mt="xs" style={{ textAlign: 'left' }}>
-          <Anchor href="/">Home</Anchor>
-          <Anchor href="/users">Users</Anchor>
-        </Breadcrumbs>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(85vh - 30px)' }}>
+      {/* Breadcrumb 永远显示 */}
+      <AppBreadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Users' }]} />
 
-      <ScrollArea style={{minHeight: '400px', overflowX: 'auto'}}>
-        <Table verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th w={40}>
-                <Checkbox
-                  onChange={toggleAll}
-                  checked={selection.length === data?.data.items.length}
-                  indeterminate={selection.length > 0 && selection.length !== data?.data.items.length}
-                />
-              </Table.Th>
-              <Table.Th>UID</Table.Th>
-              <Table.Th>Username</Table.Th>
-              <Table.Th>Email</Table.Th>
-              <Table.Th>Job</Table.Th>
-              <Table.Th>Created At</Table.Th>
-              <Table.Th>Updated At</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
+      {isLoading ? (
+        <Center style={{ minHeight: '50vh', flexDirection: 'column' }}>
+          <Loader />
+        </Center>
+      ) : !items.length ? (
+        <Center style={{ minHeight: '50vh', flexDirection: 'column' }}>
+          <Text c="dimmed">暂无用户</Text>
+        </Center>
+      ) : (
+        <>
+          <ScrollArea style={{ overflowX: 'auto' }}>
+            <Table verticalSpacing="sm">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th w={40}>
+                    <Checkbox
+                      onChange={(e) => {
+    const checked = e.currentTarget.checked;
+    if (checked) {
+      setSelection(items.map((item) => item.id));
+    } else {
+      setSelection([]);
+    }
+  }}
+                      checked={selection.length === items.length}
+                      indeterminate={selection.length > 0 && selection.length < items.length}
+                    />
+                  </Table.Th>
+                  <Table.Th>UID</Table.Th>
+                  <Table.Th>Username</Table.Th>
+                  <Table.Th>Email</Table.Th>
+                  <Table.Th>Job</Table.Th>
+                  <Table.Th>Created At</Table.Th>
+                  <Table.Th>Updated At</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {items.map((item) => (
+                  <Table.Tr key={item.id} className={cx({ [classes.rowSelected]: selection.includes(item.id) })}>
+                    <Table.Td>
+                      <Checkbox checked={selection.includes(item.id)} onChange={() => toggleRow(item.id)} />
+                    </Table.Td>
+                    <Table.Td>{item.id}</Table.Td>
+                    <Table.Td>
+                      <Group gap="sm">
+                        <Avatar size={26} src={item.avatar} radius={26} />
+                        <Text size="sm" fw={500}>{item.username}</Text>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>{item.email}</Table.Td>
+                    <Table.Td>{item.job}</Table.Td>
+                    <Table.Td>{item.created_at}</Table.Td>
+                    <Table.Td>{item.updated_at}</Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
 
-      </ScrollArea>
-              {/* 分页控件 */}
-        <Pagination
-          page={page}
-          onChange={setPage}
-          total={Math.ceil(data?.data.total / pageSize)}  // 总页数计算
-          onPerPageChange={setPageSize}
-          pageSize={pageSize}
-          position="center"
-        />
-    </>
+          <Pagination
+            value={page}
+            onChange={setPage}
+            total={Math.ceil(total / pageSize)}
+            style={{ marginTop: 'auto' }}
+          />
+        </>
+      )}
+    </div>
   );
 }

@@ -12,7 +12,7 @@ import {Notifications} from '@mantine/notifications';
 import App from './App';
 import {AuthProvider} from "@/auth/AuthProvider";
 import {LoadingProvider} from "@/context/LoginContext.tsx";
-import {GlobalLoading} from "@/components/Common/GlobalLoading.tsx";
+import {GlobalLoading} from "@/components/common/GlobalLoading.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
