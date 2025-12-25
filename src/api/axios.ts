@@ -1,8 +1,9 @@
 import axios, {AxiosError, type AxiosResponse, type InternalAxiosRequestConfig} from 'axios';
 import {API_ORIGIN_URL, API_PREFIX, API_TIMEOUT} from '@/config';
 import {emitLogout} from '@/auth/auth.events';
-import {clearTokens, getRefreshToken, getToken, setToken} from "@/auth/auth.storage.ts";
-import {AUTH_ENDPOINTS} from "@/api/endpoints.ts";
+import {clearTokens, getRefreshToken, getToken, setToken} from "@/auth/auth.storage";
+import {AUTH_ENDPOINTS} from "@/api/endpoints";
+import {useNotification} from "@/hooks/useNotification";
 
 interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -45,11 +46,22 @@ async function refreshToken() {
   return access_token;
 }
 
+export function getErrorMessage(error: unknown): { code: number; message: string } {
+  if (error && typeof error === "object" && "response" in error) {
+    const axiosError = error as AxiosError<{ code: number; message: string }>;
+    const code = axiosError.response?.data?.code ?? -1;
+    const message = axiosError.response?.data?.message || "未知错误";
+    return {code, message};
+  }
+  return {code: -1, message: "未知错误"};
+}
+
 // ========== response：401 → refresh ==========
 api.interceptors.response.use(
   (res: AxiosResponse) => res,
   async (error: AxiosError) => {
     const config = error.config as AxiosRequestConfigWithRetry;
+    const notify = useNotification();
 
     if (error.response?.status === 401 && config && !config._retry) {
       config._retry = true;
@@ -80,8 +92,7 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 403) {
-      clearTokens();
-      emitLogout();
+      notify.error("访问受限", "你没有权限执行此操作");
     }
 
     return Promise.reject(error);
