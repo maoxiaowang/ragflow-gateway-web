@@ -1,25 +1,26 @@
 import {request} from '@/api/request';
 import type {LoginParams, LoginResponse, RegisterParams, RegisterResponse} from "@/auth/auth.types";
-import {AUTH_ENDPOINTS} from "@/api/endpoints.ts";
+import {API_ENDPOINTS} from "@/api";
+import type {APIResponse} from "@/api/types";
 
 
 export const authService = {
   login(params: LoginParams) {
-    return request.post<LoginResponse>(
-      AUTH_ENDPOINTS.login,
+    return request.post<APIResponse<LoginResponse>>(
+      API_ENDPOINTS.auth.login.path,
       params,
     );
   },
 
   logout() {
     return request.post<void>(
-      AUTH_ENDPOINTS.logout,
+      API_ENDPOINTS.auth.logout.path,
     );
   },
 
   register(params: RegisterParams) {
     return request.post<RegisterResponse>(
-      AUTH_ENDPOINTS.register,
+      API_ENDPOINTS.auth.register.path,
       params
     )
   }

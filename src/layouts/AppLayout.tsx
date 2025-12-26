@@ -1,8 +1,8 @@
 import {Outlet} from 'react-router-dom';
 import {AppShell} from '@mantine/core';
 
-import {NavbarSimple} from "@/components/Navbar/NavbarSimple";
-import {HeaderSimple} from "@/components/Header/HeaderSimple";
+import {NavbarSimple} from "@/layouts/navbar/NavbarSimple";
+import {HeaderSimple} from "@/layouts/header/HeaderSimple";
 import {useDisclosure} from "@mantine/hooks";
 
 

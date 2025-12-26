@@ -46,11 +46,11 @@ export function DataLoader<T>({
       <Center style={{ minHeight: "50vh", flexDirection: 'column' }}>
         <Stack align="center" gap={10}>
           <IconAlertCircle size={48} color="#999" />
-          <Text color="dimmed">{emptyText}</Text>
+          <Text c="dimmed">{emptyText}</Text>
         </Stack>
       </Center>
     );
   }
 
-  return <Stack gap="lg">{data?.map((item) => children(item))}</Stack>;
+  return <>{data?.map((item) => children(item))}</>;
 }

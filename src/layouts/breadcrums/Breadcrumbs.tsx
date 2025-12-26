@@ -1,4 +1,4 @@
-import { Breadcrumbs, Anchor } from '@mantine/core';
+import { Breadcrumbs as _Breadcrumbs, Anchor } from '@mantine/core';
 
 interface BreadcrumbItem {
   label: string;
@@ -13,10 +13,10 @@ interface AppBreadcrumbsProps {
 /**
  * 通用面包屑组件
  */
-export function AppBreadcrumbs({ items, paddingBottom = 30 }: AppBreadcrumbsProps) {
+export function Breadcrumbs({ items, paddingBottom = 30 }: AppBreadcrumbsProps) {
   return (
     <div style={{ paddingBottom }}>
-      <Breadcrumbs separatorMargin="md" mt="xs" style={{ textAlign: 'left' }}>
+      <_Breadcrumbs separatorMargin="md" mt="xs" style={{ textAlign: 'left' }}>
         {items.map((item, index) =>
           item.href ? (
             <Anchor href={item.href} key={index}>
@@ -26,7 +26,7 @@ export function AppBreadcrumbs({ items, paddingBottom = 30 }: AppBreadcrumbsProp
             <span key={index}>{item.label}</span>
           )
         )}
-      </Breadcrumbs>
+      </_Breadcrumbs>
     </div>
   );
 }

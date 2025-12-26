@@ -4,7 +4,7 @@ import type {LoginParams} from '@/auth/auth.types';
 import {useNavigate} from 'react-router-dom';
 import {useAuth} from "@/auth/useAuth";
 import {useNotification} from "@/hooks/useNotification.tsx";
-import {getErrorMessage} from "@/api/axios.ts";
+import {getErrorMessage} from "@/api/axios";
 
 export default function Login() {
   const navigate = useNavigate();

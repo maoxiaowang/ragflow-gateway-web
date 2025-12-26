@@ -2,8 +2,9 @@ import axios, {AxiosError, type AxiosResponse, type InternalAxiosRequestConfig} 
 import {API_ORIGIN_URL, API_PREFIX, API_TIMEOUT} from '@/config';
 import {emitLogout} from '@/auth/auth.events';
 import {clearTokens, getRefreshToken, getToken, setToken} from "@/auth/auth.storage";
-import {AUTH_ENDPOINTS} from "@/api/endpoints";
+
 import {useNotification} from "@/hooks/useNotification";
+import {API_ENDPOINTS} from "@/api";
 
 interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -37,7 +38,7 @@ async function refreshToken() {
   if (!refresh) throw new Error('no refresh token');
 
   const res = await axios.post(
-    API_BASE_URL + AUTH_ENDPOINTS.refresh,
+    API_BASE_URL + API_ENDPOINTS.auth.refresh,
     {refresh_token: refresh}
   );
 
@@ -47,12 +48,17 @@ async function refreshToken() {
 }
 
 export function getErrorMessage(error: unknown): { code: number; message: string } {
-  if (error && typeof error === "object" && "response" in error) {
+  if (error && typeof error === 'object' && 'isAxiosError' in error && (error as AxiosError).isAxiosError) {
     const axiosError = error as AxiosError<{ code: number; message: string }>;
     const code = axiosError.response?.data?.code ?? -1;
-    const message = axiosError.response?.data?.message || "未知错误";
-    return {code, message};
+    const message = axiosError.response?.data?.message || '未知错误';
+    return { code, message };
   }
+
+  if (typeof error === 'object' && error !== null && 'code' in error && (error as AxiosError).code === 'ERR_NETWORK') {
+    return { code: -1, message: '无法连接到服务器' };
+  }
+
   return {code: -1, message: "未知错误"};
 }
 

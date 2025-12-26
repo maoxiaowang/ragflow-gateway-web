@@ -1,5 +1,5 @@
 import {Group, Text} from '@mantine/core';
-import {Logo} from '@/components/common/Logo';
+import {Logo} from '@/components/common/Logo.tsx';
 import {
   IconDashboard,
   IconDatabaseImport,
@@ -8,7 +8,7 @@ import {
   IconSwitchHorizontal, IconUsers,
 } from '@tabler/icons-react';
 import {Link, useLocation, useNavigate} from 'react-router-dom';
-import {useAuth} from '@/auth/useAuth';
+import {useAuth} from '@/auth/useAuth.ts';
 import classes from './NavbarSimple.module.css';
 
 const data = [

@@ -1,7 +1,7 @@
 import {request} from "@/api/request";
-import {RAGFLOW_ENDPOINTS} from "@/api/endpoints";
+import {API_ENDPOINTS} from "@/api";
 import type {Dataset, DatasetFilters} from "@/moudules/dataset/types";
-import type {ListParams, PaginatedContent, Response} from "@/api/types.ts";
+import type {ListParams, PaginatedContent, APIResponse} from "@/api/types";
 
 
 export const DatasetServices = {
@@ -21,8 +21,8 @@ export const DatasetServices = {
       ...params,
     }
 
-    const resp = await request.get<Response<PaginatedContent<Dataset>>>(
-      RAGFLOW_ENDPOINTS.dataset.list,
+    const resp = await request.get<APIResponse<PaginatedContent<Dataset>>>(
+      API_ENDPOINTS.ragflow.dataset.list.path,
       { params: finalParams }
     );
 

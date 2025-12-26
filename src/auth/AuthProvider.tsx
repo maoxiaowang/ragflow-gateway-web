@@ -1,13 +1,12 @@
 import {useEffect, useState} from 'react';
-import type {LoginParams, LoginResponse} from './auth.types';
-import {AUTH_ENDPOINTS} from '@/api/endpoints';
+import type { ReactNode } from 'react';
+import type {LoginParams} from './auth.types';
 import {onLogout} from './auth.events';
 import {AuthContext} from './authContext';
-import {request} from "@/api/request.ts";
-import {clearTokens, getToken, setRefreshToken, setToken} from "@/auth/auth.storage.ts";
-import type {Response} from "@/api/types.ts";
+import {clearTokens, getToken, setRefreshToken, setToken} from "@/auth/auth.storage";
+import {authService} from "@/auth/authService";
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getToken());
 
   useEffect(() => {
@@ -15,7 +14,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (params: LoginParams) => {
-    const res = await request.post<Response<LoginResponse>>(AUTH_ENDPOINTS.login, params);
+    const res = await authService.login(params);
     setToken(res.data.access_token);
     setRefreshToken(res.data.refresh_token);
     setIsAuthenticated(true);

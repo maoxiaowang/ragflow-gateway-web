@@ -1,15 +1,14 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { useAuth } from './useAuth';
+import type {JSX} from "react";
+import {useAuth} from "@/auth/useAuth";
+import {ROUTES} from "@/routes";
 
-export function RequireAuth({ children }: { children: ReactNode }) {
-  const { isAuthenticated, authChecked } = useAuth();
+export function RequireAuth({ children }: { children: JSX.Element }) {
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (!authChecked) return <div>Loading...</div>;
-
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={ROUTES.auth.login.path} state={{ from: location }} replace />;
   }
 
   return children;
