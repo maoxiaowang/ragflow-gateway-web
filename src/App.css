@@ -43,3 +43,7 @@
 .mantine-Table-td {
     text-align: left;
 }
+
+.mantine-Table-table th {
+  text-align: left;
+}

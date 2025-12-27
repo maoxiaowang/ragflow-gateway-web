@@ -12,11 +12,11 @@ export const ROUTES = {
 
   datasets: {
     list: {path: '/datasets', label: '知识库列表'},
-    detail: (id: string) => ({path: `/datasets/${id}`, label: '知识库详情'}),
+    detail: {path: '/datasets/:datasetId', url: (id: string) => `/datasets/${id}`, label: '知识库详情'},
   },
 
   users: {
     list: {path: '/users', label: '用户列表'},
-    detail: (id: string) => ({path: `/users/${id}`, label: '用户详情'}),
+    detail: {path: '/users/:userId', url: (id: string) => `/datasets/${id}`, label: '用户详情'},
   },
 } as const;

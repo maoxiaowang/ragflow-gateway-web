@@ -1,10 +1,12 @@
 import {useState} from 'react';
-import {Box, Button, Center, Paper, PasswordInput, TextInput, Title} from '@mantine/core';
-import type {LoginParams} from '@/auth/auth.types';
 import {useNavigate} from 'react-router-dom';
-import {useAuth} from "@/auth/useAuth";
-import {useNotification} from "@/hooks/useNotification.tsx";
-import {getErrorMessage} from "@/api/axios";
+import {Box, Button, Center, Paper, PasswordInput, TextInput, Title} from '@mantine/core';
+import {useNotification} from '@/hooks/useNotification';
+import {ROUTES} from '@/routes';
+
+import type {LoginParams} from '@/auth/types';
+import {useAuth} from '@/auth/useAuth';
+import {AuthError} from '@/auth/errors';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,16 +20,15 @@ export default function Login() {
     setLoading(true);
 
     const params: LoginParams = {username, password};
+
     try {
       await login(params);
-      navigate('/'); // 成功跳转
-    } catch (err) {
-      const {code, message} = getErrorMessage(err)
-      if (code === 40101) {
-        notify.error("登录失败", "用户名或密码错误");
+      navigate(ROUTES.dashboard.path); // 成功跳转
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        notify.error('登录失败', err.message);
       } else {
-        // 其他错误统一处理
-        notify.error("请求失败", message);
+        notify.error('登录失败', '未知错误');
       }
       setPassword('');
     } finally {
@@ -36,10 +37,7 @@ export default function Login() {
   };
 
   return (
-    <Center style={{
-      height: '100vh',
-      flexDirection: 'column',
-    }}>
+    <Center style={{height: '100vh', flexDirection: 'column'}}>
       <Box>
         {/* 标题 */}
         <Center mb="xl">
@@ -48,10 +46,12 @@ export default function Login() {
 
         {/* 登录表单 */}
         <Paper withBorder shadow="md" p={30} radius="md" style={{minWidth: 360}}>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSubmit();
+            }}
+          >
             <TextInput
               name="username"
               label="用户名"

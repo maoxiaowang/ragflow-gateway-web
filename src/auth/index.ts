@@ -1,1 +1,1 @@
-export {authService} from "./authService";
+export {service} from "./service.ts";

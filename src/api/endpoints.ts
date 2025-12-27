@@ -15,5 +15,11 @@ export const API_ENDPOINTS = {
     dataset: {
       list: { path: '/ragflow/datasets', label: '知识库列表' },
     },
+    document: {
+      list: (id: string) => ({path: `/ragflow/datasets/${id}/documents`, label: '文档列表'}),
+      upload: (datasetId: string) => ({
+        path: `/ragflow/datasets/${datasetId}/documents`, label: '上传文档'
+      }),
+    }
   },
 } as const;

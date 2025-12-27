@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type {LoginParams} from "@/auth/auth.types.ts";
+import type {LoginParams} from "@/auth/types.ts";
 
 export interface AuthContextProps {
   isAuthenticated: boolean;

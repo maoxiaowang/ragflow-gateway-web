@@ -1,13 +1,5 @@
 import {useState} from 'react';
-import {
-  Avatar, Center,
-  Checkbox,
-  Group, Loader,
-  Pagination,
-  ScrollArea,
-  Table,
-  Text
-} from '@mantine/core';
+import {Avatar, Center, Checkbox, Group, Loader, Pagination, ScrollArea, Table, Text} from '@mantine/core';
 import {useQuery} from '@tanstack/react-query';
 import classes from './UserList.module.css';
 import cx from 'clsx';
@@ -20,7 +12,7 @@ import type {User} from "@/moudules/user/types";
 export function UserListPage() {
   const [selection, setSelection] = useState<number[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [orderBy, setOrderBy] = useState('created_at'); // 默认排序字段
   const [descOrder, setDescOrder] = useState(false); // 默认升序
 
@@ -33,11 +25,13 @@ export function UserListPage() {
   //   setSelection((current) => (current.length === items.length ? [] : items.map((item) => item.id)));
 
 
-  const {data: resp, isLoading} = useQuery<PaginatedContent<User>>({
-    queryKey: ['users', page, pageSize, orderBy, descOrder],
-    queryFn: () =>
-      UserService.list(page, pageSize, orderBy, descOrder)
-  });
+const { data: resp, isLoading } = useQuery<PaginatedContent<User>>({
+  queryKey: ['users', page, pageSize],
+  queryFn: async () => {
+    const result = await UserService.list_users(page, pageSize);
+    return result.data; // 返回 PaginatedContent<User>
+  },
+});
 
   const items = resp?.items ?? [];
   const total = resp?.total ?? 0;
