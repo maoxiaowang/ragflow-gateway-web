@@ -13,12 +13,11 @@ export const DatasetService = {
       order_by: 'create_time',
       desc: true,
     };
-
-    const finalParams: ListParams<DatasetFilters> = { ...defaultParams, ...params };
-
+    const finalParams: ListParams<DatasetFilters> = {...defaultParams, ...params};
+    const endpoint = API_ENDPOINTS.ragflow.dataset.list
     return fetchPaginatedApi<Dataset>({
-      url: API_ENDPOINTS.ragflow.dataset.list.path,
-      method: "GET",
+      url: endpoint.path,
+      method: endpoint.method,
       params: finalParams
     });
   },
@@ -27,35 +26,73 @@ export const DatasetService = {
     datasetId: string,
     params: Partial<ListParams<DocumentFilters>> = {}
   ): Promise<APIPaginatedResult<Document>> => {
-
     const defaultParams: ListParams<DocumentFilters> = {
       page: 1,
       page_size: 30,
       order_by: 'create_time',
       desc: true,
     };
-
-    const finalParams: ListParams<DocumentFilters> = { ...defaultParams, ...params };
-
+    const finalParams: ListParams<DocumentFilters> = {...defaultParams, ...params};
+    const endpoint = API_ENDPOINTS.ragflow.document.list(datasetId)
     return fetchPaginatedApi<Document>({
-      url: API_ENDPOINTS.ragflow.document.list(datasetId).path,
-      method: "GET",
+      url: endpoint.path,
+      method: endpoint.method,
       params: finalParams
     });
   },
 
- uploadDocument: async (
+  uploadDocument: async (
     datasetId: string,
     file: File
-  ): Promise<APIResult<UploadDocument | null>> => {
+  ): Promise<APIResult<UploadDocument[] | null>> => {
     const formData = new FormData();
     formData.append("files", file);
 
     // 直接返回 fetchApi 的结果
-    return fetchApi<UploadDocument>({
-      url: API_ENDPOINTS.ragflow.document.upload(datasetId).path,
-      method: "POST",
+    const endpoint = API_ENDPOINTS.ragflow.document.upload(datasetId)
+    return fetchApi<UploadDocument[]>({
+      url: endpoint.path,
+      method: endpoint.method,
       data: formData,
     });
   },
+
+  deleteDocuments: async (
+    datasetId: string,
+    documentIds: string[]
+  ): Promise<APIResult<null>> => {
+    const endpoint = API_ENDPOINTS.ragflow.document.delete(datasetId)
+    return fetchApi<null>({
+      url: endpoint.path,
+      method: endpoint.method,
+      data: {
+        document_ids: documentIds,
+      },
+    });
+  },
+
+  parseDocuments: async (
+    datasetId: string,
+    documentIds: string[]
+  ): Promise<APIResult<null>> => {
+    const endpoint = API_ENDPOINTS.ragflow.document.parse(datasetId)
+    return fetchApi<null>({
+      url: endpoint.path,
+      method: endpoint.method,
+      data: {
+        document_ids: documentIds
+      }
+    })
+  },
+
+  deleteChunks: async (
+    datasetId: string,
+    documentId: string
+  ): Promise<APIResult<null>> => {
+    const endpoint = API_ENDPOINTS.ragflow.document.deleteChunks(datasetId, documentId)
+    return fetchApi<null>({
+      url: endpoint.path,
+      method: endpoint.method
+    })
+  }
 };

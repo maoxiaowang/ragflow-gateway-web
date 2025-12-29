@@ -5,11 +5,12 @@ import type {APIResult} from "@/api/types";
 
 
 export const AuthService = {
-  login(params: LoginParams): Promise<APIResult<LoginResponse>> {
+  login(params: LoginParams): Promise<APIResult<LoginResponse | null>> {
+    const endpoint = API_ENDPOINTS.auth.login;
     return fetchApi<LoginResponse>({
-      url: API_ENDPOINTS.auth.login.path,
+      url: endpoint.path,
       data: params,
-      method: 'POST'
+      method: endpoint.method
     });
   },
 
@@ -21,7 +22,7 @@ export const AuthService = {
     });
   },
 
-  register(params: RegisterParams): Promise<APIResult<RegisterResponse>> {
+  register(params: RegisterParams): Promise<APIResult<RegisterResponse | null>> {
     // 暂时没用
     return fetchApi<RegisterResponse>({
       url: API_ENDPOINTS.auth.register.path,

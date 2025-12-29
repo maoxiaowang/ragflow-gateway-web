@@ -15,25 +15,17 @@ export interface Dataset {
 }
 
 export interface DatasetFilters {
-  id?: string
+  _id?: string
   name?: string
 }
 
 export type DocumentStatus =
-  | "UNSTART"  // 0
-  | "RUNNING"  // 1
-  | "CANCEL"   // 2
-  | "DONE"     // 3
-  | "FAIL";    // 4
+  | "UNSTART"
+  | "RUNNING"
+  | "CANCEL"
+  | "DONE"
+  | "FAIL";
 
-// 状态对应描述
-export const DocumentStatusMap: Record<DocumentStatus, string> = {
-  UNSTART: "待解析",
-  RUNNING: "处理中",
-  CANCEL: "已取消",
-  DONE: "解析成功",
-  FAIL: "解析失败",
-};
 
 // 文档接口
 export interface Document {
@@ -54,7 +46,7 @@ export interface Document {
 
 export interface DocumentFilters {
   keywords?: string
-  suffix?: string
+  // suffix?: string
 }
 
 

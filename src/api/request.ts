@@ -11,7 +11,6 @@ export async function fetchApi<T>(
     const res = await api.request<APIResponse<T | null>>(config);
     const response = res.data;
 
-    console.log('fetchApi')
     // 理论上不该发生，但兜底
     if (!response) {
       return {
@@ -36,9 +35,7 @@ export async function fetchPaginatedApi<T>(
   config: AxiosRequestConfig
 ): Promise<APIPaginatedResult<T>> {
   try {
-    console.log('fetchPaginatedApi1')
     const res = await api.request<APIResponse<PaginatedContent<T> | null>>(config);
-    console.log('fetchPaginatedApi2')
     const response = res.data;
 
     if (response?.code === 0 && response.data) {
@@ -48,8 +45,6 @@ export async function fetchPaginatedApi<T>(
         data: response.data,
       };
     }
-
-    console.log('fetchPaginatedApi3')
 
     return {
       code: response?.code ?? -1,
@@ -76,10 +71,7 @@ function emptyPage<T>(): PaginatedContent<T> {
 
 // ================= AxiosError 统一处理 =================
 function handleAxiosError<T = null>(error: unknown): APIResult<T> {
-  console.log('handleAxiosError')
-  console.log(error)
   if (axios.isAxiosError(error)) {
-    console.log('isAxiosError')
     if (error.code === 'ERR_NETWORK') {
       return { code: -1, message: '无法连接到服务器', data: null as T };
     }
@@ -92,6 +84,5 @@ function handleAxiosError<T = null>(error: unknown): APIResult<T> {
       };
     }
   }
-  console.log('handleAxiosError end')
   return { code: -1, message: '网络异常', data: null as T };
 }

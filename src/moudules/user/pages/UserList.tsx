@@ -38,7 +38,6 @@ const { data: resp, isLoading } = useQuery<PaginatedContent<User>>({
 
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: 'calc(85vh - 30px)'}}>
-      {/* Breadcrumb 永远显示 */}
       <Breadcrumbs items={[{label: 'Home', href: '/'}, {label: 'Users'}]}/>
 
       {isLoading ? (

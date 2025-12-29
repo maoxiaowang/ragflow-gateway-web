@@ -1,7 +1,11 @@
-#root {
+/*#root {*/
+/*  max-width: 1800px;*/
+/*  margin: 0 auto;*/
+/*  !*text-align: center;*!*/
+/*}*/
+#root > .mainApp {
   max-width: 1800px;
   margin: 0 auto;
-  /*text-align: center;*/
 }
 
 .logo {
@@ -46,4 +50,16 @@
 
 .mantine-Table-table th {
   text-align: left;
+}
+
+.mantine-Table-table {
+  font-size: 13px; /* 默认是 14px */
+}
+
+.mantine-Table-table .mantine-Text-root {
+  font-size: 13px;
+}
+
+.mantine-Breadcrumbs-root a {
+  font-size: 15px;
 }

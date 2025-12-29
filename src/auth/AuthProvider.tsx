@@ -16,7 +16,7 @@ export function AuthProvider({children}: { children: ReactNode }) {
 
   const login = async (params: LoginParams) => {
     const res = await AuthService.login(params);
-    if (res.code !== 0) {
+    if (res.code !== 0 || !res.data) {
       // 特殊处理登录失败
       throw new AuthError(res.message);
     }

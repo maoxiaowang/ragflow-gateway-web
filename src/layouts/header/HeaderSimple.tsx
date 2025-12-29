@@ -1,20 +1,18 @@
-import {Burger, Container, Group, Text} from '@mantine/core';
-import { Logo } from '@/components/common/Logo.tsx';
+import {Box, Burger, Container, Group, Text} from '@mantine/core';
+import {Logo} from '@/components/common/Logo.tsx';
 import classes from './HeaderSimple.module.css';
 import {useState} from "react";
 
 const links = [
-  { link: '/about', label: 'Features' },
-  { link: '/pricing', label: 'Pricing' },
-  { link: '/learn', label: 'Learn' },
-  { link: '/community', label: 'Community' },
+  {link: '/about', label: 'Features'},
+  {link: '/pricing', label: 'Pricing'},
+  {link: '/learn', label: 'Learn'},
+  {link: '/community', label: 'Community'},
 ];
 
 export function HeaderSimple({
-  mobileOpened,
-  toggleMobile,
-}: {
-  mobileOpened: boolean;
+                               toggleMobile,
+                             }: {
   toggleMobile: () => void;
 }) {
   const [active, setActive] = useState(links[0].link);
@@ -34,11 +32,14 @@ export function HeaderSimple({
   ));
 
   return (
-    <header className={classes.header}>
+    <Box className={classes.header}>
       <Container size="lg" className={classes.inner}>
         <Group justify="flex-start">
-          <Logo height={28} />
-        <Text>Ragflow Gateway</Text>
+          <Logo height={28}/>
+          <Text variant="gradient"
+                gradient={{from: 'blue', to: 'cyan', deg: 90}}>
+            Ragflow Gateway
+          </Text>
         </Group>
 
         <Group gap={8} visibleFrom="xs">
@@ -48,12 +49,11 @@ export function HeaderSimple({
 
         {/* 仅移动端显示 */}
         <Burger
-          opened={mobileOpened}
           onClick={toggleMobile}
           hiddenFrom="sm"
           size="sm"
         />
       </Container>
-    </header>
+    </Box>
   );
 }

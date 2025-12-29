@@ -4,7 +4,6 @@ import {
   IconDashboard,
   IconDatabaseImport,
   IconLogout, IconMessage, IconMessageChatbot,
-  IconSettings,
   IconSwitchHorizontal, IconUsers,
 } from '@tabler/icons-react';
 import {Link, useLocation, useNavigate} from 'react-router-dom';
@@ -12,12 +11,11 @@ import {useAuth} from '@/auth/useAuth.ts';
 import classes from './NavbarSimple.module.css';
 
 const data = [
-  {link: '/', label: 'Dashboard', icon: IconDashboard},
-  {link: '/datasets', label: 'Datasets', icon: IconDatabaseImport},
+  {link: '/', label: '首页', icon: IconDashboard},
+  {link: '/datasets', label: '知识库', icon: IconDatabaseImport},
   {link: '/chats', label: 'Chats', icon: IconMessage},
-  {link: '/agents', label: 'Agent', icon: IconMessageChatbot},
-  {link: '/users', label: 'Users', icon: IconUsers},
-  {link: '/settings', label: 'Other Settings', icon: IconSettings},
+  {link: '/agents', label: '智能体', icon: IconMessageChatbot},
+  {link: '/users', label: '用户', icon: IconUsers},
 ];
 
 export function NavbarSimple() {
@@ -42,7 +40,11 @@ export function NavbarSimple() {
       <div className={classes.navbarMain}>
         <Group className={classes.header}>
           <Logo height={32}/>
-          <Text fw={600} size="md">
+          <Text variant="gradient"
+                gradient={{from: 'blue', to: 'cyan', deg: 90}}
+                fw={600}
+                size="md"
+          >
             Ragflow Gateway
           </Text>
         </Group>
@@ -52,7 +54,7 @@ export function NavbarSimple() {
       <div className={classes.footer}>
         <a href="#" className={classes.link} onClick={(e) => e.preventDefault()}>
           <IconSwitchHorizontal className={classes.linkIcon} stroke={1.5}/>
-          <span>Change account</span>
+          <span>切换账号</span>
         </a>
 
         <a
@@ -65,7 +67,7 @@ export function NavbarSimple() {
           }}
         >
           <IconLogout className={classes.linkIcon} stroke={1.5}/>
-          <span>Logout</span>
+          <span>登出</span>
         </a>
       </div>
     </nav>

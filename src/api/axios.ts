@@ -40,9 +40,9 @@ const onRefreshed = (token: string) => {
 async function refreshToken(): Promise<string> {
   const refresh = getRefreshToken();
   if (!refresh) throw new Error('no refresh token');
-
+  const endpoint = API_ENDPOINTS.auth.refresh
   const res = await axios.post<APIResponse<{ access_token: string }>>(
-    API_BASE_URL + API_ENDPOINTS.auth.refresh.path,
+    API_BASE_URL + endpoint.path,
     { refresh_token: refresh }
   );
 
@@ -56,10 +56,8 @@ api.interceptors.response.use(
   (res: AxiosResponse) => res,
   async (error: AxiosError) => {
     const config = error.config as AxiosRequestConfigWithRetry;
-    console.log('hello 401')
 
     if (error.response?.status === 401 && config && !config._retry) {
-      console.log('----------401 start')
       config._retry = true;
 
       if (isRefreshing) {
@@ -73,16 +71,13 @@ api.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        console.log('try get refresh token')
         const newToken = await refreshToken();
-        console.log('new token: '+ newToken)
         isRefreshing = false;
         onRefreshed(newToken);
 
         config.headers!.Authorization = `Bearer ${newToken}`;
         return api(config);
       } catch {
-        console.log('refresh error, clear tokens')
         isRefreshing = false;
         clearTokens();
         emitLogout();
