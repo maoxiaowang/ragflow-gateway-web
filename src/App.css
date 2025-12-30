@@ -53,11 +53,11 @@
 }
 
 .mantine-Table-table {
-  font-size: 13px; /* 默认是 14px */
+  font-size: 14px; /* 默认是 14px */
 }
 
 .mantine-Table-table .mantine-Text-root {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .mantine-Breadcrumbs-root a {

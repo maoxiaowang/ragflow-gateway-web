@@ -1,5 +1,5 @@
 import {fetchApi} from '@/api/request';
-import type {LoginParams, LoginResponse, RegisterParams, RegisterResponse} from "@/auth/types.ts";
+import type {LoginParams, LoginResponse, RegisterParams, RegisterResponse, PasswordRules} from "@/auth/types.ts";
 import {API_ENDPOINTS} from "@/api";
 import type {APIResult} from "@/api/types";
 
@@ -28,6 +28,12 @@ export const AuthService = {
       url: API_ENDPOINTS.auth.register.path,
       data: params,
       method: 'POST'
+    })
+  },
+
+  getPasswordRules(): Promise<APIResult<PasswordRules | null>> {
+    return fetchApi<PasswordRules>({
+      url: API_ENDPOINTS.auth.getPassRules.path
     })
   }
 };

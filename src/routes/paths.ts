@@ -4,6 +4,7 @@
 export const ROUTES = {
   auth: {
     login: {path: '/auth/login', label: '登录获取token'},
+    register: {path: '/auth/register', label: '用户注册'},
     logout: {path: '/auth/logout', label: '退出登录'},
     refresh: {path: '/auth/refresh', label: '刷新token'}
   },

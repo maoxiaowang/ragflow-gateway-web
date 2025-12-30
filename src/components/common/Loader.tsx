@@ -1,6 +1,6 @@
 import {Center, Loader, Stack, Text} from "@mantine/core";
 import {IconAlertCircle} from "@tabler/icons-react";
-import {useEffect, useState, type ReactNode} from "react";
+import React, {useEffect, useState, type ReactNode} from "react";
 
 
 interface DataLoaderSingleProps<T> {
@@ -12,15 +12,14 @@ interface DataLoaderSingleProps<T> {
   minHeight?: number | string;
 }
 
-export function DataLoaderSingle<T>(
-  {
-    loading,
-    data,
-    emptyText = "暂无数据",
-    emptyIcon = <IconAlertCircle size={48} color="#999"/>,
-    children,
-    minHeight = "50vh",
-  }: DataLoaderSingleProps<T>) {
+export function DataLoaderSingle<T>({
+  loading,
+  data,
+  emptyText = "暂无数据",
+  emptyIcon = <IconAlertCircle size={48} color="#999" />,
+  children,
+  containerStyle = { minHeight: "50vh" },
+}: DataLoaderSingleProps<T> & { containerStyle?: React.CSSProperties }) {
   const [showLoader, setShowLoader] = useState(false);
 
   useEffect(() => {
@@ -30,17 +29,19 @@ export function DataLoaderSingle<T>(
     return () => clearTimeout(timer);
   }, [loading]);
 
+  const style = { display: "flex", flexDirection: "column" as const, justifyContent: "center", alignItems: "center", ...containerStyle };
+
   if (loading && showLoader) {
     return (
-      <Center style={{minHeight, flexDirection: "column"}}>
-        <Loader/>
+      <Center style={style}>
+        <Loader />
       </Center>
     );
   }
-  // <IconAlertCircle size={48} color="#999"/>
+
   if (!data) {
     return (
-      <Center style={{minHeight, flexDirection: "column"}}>
+      <Center style={style}>
         <Stack align="center" gap={10}>
           {typeof emptyIcon === "function" ? emptyIcon(data) : emptyIcon}
           <Text c="dimmed">

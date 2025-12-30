@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
     register: { path: '/auth/register', label: '注册', method: 'POST' },
     logout: { path: '/auth/logout', label: '退出登录' , method: 'DELETE'},
     refresh: { path: '/auth/refresh', label: '刷新 token' , method: 'POST'},
+    getPassRules: {path: '/auth/password-rules', label: '密码规则', method: 'GET'},
   },
   user: {
     list: { path: '/users', label: '用户列表' , method: 'GET'},
