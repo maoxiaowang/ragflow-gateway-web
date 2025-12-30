@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import React, { useRef } from "react";
 import {
   Button,
   Group,
@@ -125,11 +125,11 @@ export function DropzoneWithButton({
           </Text>
         </div>
 
-        <Center mt="sm">
-          <Button radius={50} onClick={handleOpenFiles} disabled={uploading}>
-            选择文件
-          </Button>
-        </Center>
+        {/*<Center mt="lg">*/}
+        {/*  <Button radius={50} onClick={handleOpenFiles} disabled={uploading}>*/}
+        {/*    选择文件*/}
+        {/*  </Button>*/}
+        {/*</Center>*/}
       </MantineDropzone>
 
       {/* 上传进度条 */}

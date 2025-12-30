@@ -72,6 +72,7 @@ export default function Login() {
             size="md"
             radius="md"
             required
+            autoFocus
             {...form.getInputProps('username')}
           />
 

@@ -321,7 +321,8 @@ export function DatasetDetailPage() {
       />
 
       {/* 知识库信息 */}
-      <DataLoaderSingle loading={loadingDataset} data={dataset} containerStyle={{minHeight: 171, backgroundColor: "#f6f6f6"}}>
+      <DataLoaderSingle loading={loadingDataset} data={dataset}
+                        containerStyle={{minHeight: 171, backgroundColor: "#f6f6f6"}}>
         {(ds) => (
           <Paper radius="md" p="lg" style={{backgroundColor: "#f6f6f6"}}>
             <Group justify="space-between" align="flex-start">

@@ -137,6 +137,7 @@ export default function Register() {
             size="md"
             radius="md"
             required
+            autoFocus
             {...form.getInputProps('username')}
           />
 
