@@ -73,7 +73,7 @@ export function DropzoneWithButton({
         openRef={openRef}
         disabled={uploading}
         multiple
-        maxSize={30 * 1024 ** 2}
+        maxSize={100 * 1024 ** 2}
         accept={[
           MIME_TYPES.pdf,
           MIME_TYPES.doc,
@@ -121,7 +121,7 @@ export function DropzoneWithButton({
           </Text>
 
           <Text size="sm" c="dimmed" ta="center" mt={4}>
-            支持 文本/ PDF / 图片 / Excel / PPT / Word 等，单文件最大 30MB
+            支持 文本/ PDF / 图片 / Excel / PPT / Word 等，单文件最大 100MB
           </Text>
         </div>
 
