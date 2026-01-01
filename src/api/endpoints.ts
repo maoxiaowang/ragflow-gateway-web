@@ -9,8 +9,10 @@ export const API_ENDPOINTS = {
     refresh: { path: '/auth/refresh', label: '刷新 token' , method: 'POST'},
     getPassRules: {path: '/auth/password-rules', label: '密码规则', method: 'GET'},
   },
-  user: {
-    list: { path: '/users', label: '用户列表' , method: 'GET'},
+  iam: {
+    user: {
+      list: { path: '/iam/users', label: '用户列表' , method: 'GET'},
+    }
   },
   ragflow: {
     dataset: {

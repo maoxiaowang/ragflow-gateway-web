@@ -10,7 +10,7 @@ export const UserService = {
     order_by?: string,
     desc_order?: boolean
   ): Promise<APIPaginatedResult<User>> => {
-    const endpoint = API_ENDPOINTS.user.list
+    const endpoint = API_ENDPOINTS.iam.user.list
     return fetchPaginatedApi<User>({
       url: endpoint.path,
       params: { page, page_size, order_by, desc: desc_order },
