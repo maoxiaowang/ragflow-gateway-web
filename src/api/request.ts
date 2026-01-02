@@ -11,7 +11,6 @@ export async function fetchApi<T>(
     const res = await api.request<APIResponse<T | null>>(config);
     const response = res.data;
 
-    // 理论上不该发生，但兜底
     if (!response) {
       return {
         code: -1,

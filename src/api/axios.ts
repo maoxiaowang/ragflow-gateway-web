@@ -7,7 +7,7 @@ import { API_ORIGIN_URL, API_PREFIX, API_TIMEOUT } from '@/config';
 import { emitLogout } from '@/auth/events.ts';
 import { clearTokens, getRefreshToken, getToken, setToken } from "@/auth/storage.ts";
 import { API_ENDPOINTS } from "@/api";
-import type { APIResponse } from "./types";
+import type {APIErrorResponse, APIResponse} from "./types";
 import { notifications } from '@mantine/notifications';
 
 interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
@@ -85,11 +85,13 @@ api.interceptors.response.use(
       }
     }
 
+    const data = error.response?.data as APIErrorResponse
+    const msg = data?.message;
     switch (error.response?.status) {
       case 401:
         notifications.show({
           title: "未登录",
-          message: "请登录后再进行操作",
+          message: msg ?? "请登录后再进行操作",
           color: "red",
           autoClose: 5000,
         });
@@ -97,7 +99,7 @@ api.interceptors.response.use(
       case 403:
         notifications.show({
           title: "访问受限",
-          message: "你没有权限执行此操作",
+          message: msg ?? "你没有权限执行此操作",
           color: "red",
           autoClose: 5000,
         });
@@ -105,7 +107,15 @@ api.interceptors.response.use(
       case 404:
         notifications.show({
           title: "未找到",
-          message: "请求的资源不存在",
+          message: msg ?? "请求的资源不存在",
+          color: "yellow",
+          autoClose: 5000,
+        });
+        break;
+      case 409:
+        notifications.show({
+          title: "资源冲突",
+          message: "请求创建的资源已存在",
           color: "yellow",
           autoClose: 5000,
         });

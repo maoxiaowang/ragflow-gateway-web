@@ -6,6 +6,12 @@ export interface APIResponse<T> {
   data: T;  // 普通对象数据 / 分页对象 / 出错为 null
 }
 
+export interface APIErrorResponse {
+  code: number;
+  message: string;
+  data: null
+}
+
 export interface PaginatedContent<T> {
   // 分页对象
   total: number;
