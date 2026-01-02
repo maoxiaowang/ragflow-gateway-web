@@ -86,6 +86,14 @@ api.interceptors.response.use(
     }
 
     switch (error.response?.status) {
+      case 401:
+        notifications.show({
+          title: "未登录",
+          message: "请登录后再进行操作",
+          color: "red",
+          autoClose: 5000,
+        });
+        break;
       case 403:
         notifications.show({
           title: "访问受限",
