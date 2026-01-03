@@ -1,4 +1,3 @@
-
 export interface User {
   id: number;
   username: string;
@@ -10,7 +9,6 @@ export interface User {
   updated_at: string;
 }
 
-
 export interface Role {
   id: number;
   name: string;
@@ -19,7 +17,6 @@ export interface Role {
   updated_at?: string;
 }
 
-
 export interface Permission {
   id: number;
   name: string;
@@ -27,10 +24,15 @@ export interface Permission {
   updated_at?: string;
 }
 
-
 export interface CreateUser {
   username: string;
   password: string;
   nickname?: string;
   is_active?: boolean;
+}
+
+export interface DeleteUserResponse {
+  id: number;              // The user ID
+  success: boolean;        // Whether deletion succeeded
+  reason?: string | null;  // Optional reason if failed
 }

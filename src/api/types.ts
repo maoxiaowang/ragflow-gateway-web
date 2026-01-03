@@ -1,16 +1,20 @@
-export interface APIResponse<T> {
-  // 后端接口返回
-  code: number;  // 状态码，0 表示成功
-  message: string;  // 提示信息，正常是空字符串，只在出错时有信息
-  detail?: unknown;  // 4xx具体错误信息，可不关注
-  data: T;  // 普通对象数据 / 分页对象 / 出错为 null
+export interface APISuccessResponse<T> {
+  code: 0;
+  message: string;
+  data: T;
 }
 
 export interface APIErrorResponse {
-  code: number;
+  code: number;        // 非 0
   message: string;
-  data: null
+  detail?: unknown;
+  data: null;
 }
+
+export type APIResponse<T> =
+  | APISuccessResponse<T>
+  | APIErrorResponse;
+
 
 export interface PaginatedContent<T> {
   // 分页对象
@@ -20,17 +24,10 @@ export interface PaginatedContent<T> {
   items: T[];  // 分页数据
 }
 
-export interface APIPaginatedResult<T> {
-  code: number;
-  message: string;
-  data: PaginatedContent<T>;
-}
+export type APIPaginatedResponse<T> =
+  APISuccessResponse<PaginatedContent<T>>
+  | APIErrorResponse;
 
-export interface APIResult<T> {
-  code: number;
-  message: string;
-  data: T;
-}
 
 export interface BaseListParams {
   page: number

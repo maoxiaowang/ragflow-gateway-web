@@ -15,14 +15,21 @@ export function DatasetPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      const resp = await DatasetService.list_datasets({'page': 1});
-      if (resp.code === 0) {
-        setDatasets(resp.data.items);
-      } else {
-        notify.error('获取知识库失败', resp.message)
+      try {
+        setLoading(true);
+        const resp = await DatasetService.list_datasets({ page: 1 });
+
+        setDatasets(resp.items);
+
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          notify.error('获取知识库失败', error.message);
+        } else {
+          notify.error('获取知识库失败', '未知错误');
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     void fetchData();
   }, [notify]);

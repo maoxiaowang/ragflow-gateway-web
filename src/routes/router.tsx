@@ -1,10 +1,10 @@
 import {Navigate, Route, Routes} from 'react-router-dom';
 import Login from '@/pages/Login';
-import Register from '@/pages/register';
+import Register from '@/pages/Register.tsx';
 import Dashboard from '@/pages/Dashboard';
 import AppLayout from '@/layouts/AppLayout';
 import {RequireAuth} from '@/auth/RequireAuth';
-import {UserListPage} from "@/moudules/iam/pages/UserList";
+import UserListPage from "@/moudules/iam/pages/UserList";
 import {DatasetPage} from "@/moudules/dataset/pages/DatasetList";
 import {ROUTES} from "./paths";
 import {DatasetDetailPage} from "@/moudules/dataset/pages/DatasetDetail";

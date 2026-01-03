@@ -1,14 +1,9 @@
-import axios, {
-  AxiosError,
-  type AxiosResponse,
-  type InternalAxiosRequestConfig,
-} from 'axios';
-import { API_ORIGIN_URL, API_PREFIX, API_TIMEOUT } from '@/config';
-import { emitLogout } from '@/auth/events.ts';
-import { clearTokens, getRefreshToken, getToken, setToken } from "@/auth/storage.ts";
-import { API_ENDPOINTS } from "@/api";
-import type {APIErrorResponse, APIResponse} from "./types";
-import { notifications } from '@mantine/notifications';
+import axios, {AxiosError, type AxiosResponse, type InternalAxiosRequestConfig,} from 'axios';
+import {API_ORIGIN_URL, API_PREFIX, API_TIMEOUT} from '@/config';
+import {emitLogout} from '@/auth/events.ts';
+import {clearTokens, getRefreshToken, getToken, setToken} from "@/auth/storage.ts";
+import {API_ENDPOINTS} from "@/api";
+import type {APIResponse} from "./types";
 
 interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -21,42 +16,20 @@ const api = axios.create({
   timeout: API_TIMEOUT || 5000,
 });
 
-// ================= request：自动加 token =================
+// ================= Request interceptor =================
 api.interceptors.request.use(config => {
   const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// ================= refresh 逻辑 =================
-let isRefreshing = false;
-let refreshQueue: ((token: string) => void)[] = [];
-
-const onRefreshed = (token: string) => {
-  refreshQueue.forEach(cb => cb(token));
-  refreshQueue = [];
-};
-
-async function refreshToken(): Promise<string> {
-  const refresh = getRefreshToken();
-  if (!refresh) throw new Error('no refresh token');
-  const endpoint = API_ENDPOINTS.auth.refresh
-  const res = await axios.post<APIResponse<{ access_token: string }>>(
-    API_BASE_URL + endpoint.path,
-    { refresh_token: refresh }
-  );
-
-  const access_token = res.data.data.access_token;
-  setToken(access_token);
-  return access_token;
-}
-
-// ================= response 拦截器 =================
+// ================= Response interceptor =================
 api.interceptors.response.use(
   (res: AxiosResponse) => res,
   async (error: AxiosError) => {
     const config = error.config as AxiosRequestConfigWithRetry;
 
+    // ---- 401 + refresh token ----
     if (error.response?.status === 401 && config && !config._retry) {
       config._retry = true;
 
@@ -85,56 +58,76 @@ api.interceptors.response.use(
       }
     }
 
-    const data = error.response?.data as APIErrorResponse
-    const msg = data?.message;
-    switch (error.response?.status) {
-      case 401:
-        notifications.show({
-          title: "未登录",
-          message: msg ?? "请登录后再进行操作",
-          color: "red",
-          autoClose: 5000,
-        });
-        break;
-      case 403:
-        notifications.show({
-          title: "访问受限",
-          message: msg ?? "你没有权限执行此操作",
-          color: "red",
-          autoClose: 5000,
-        });
-        break;
-      case 404:
-        notifications.show({
-          title: "未找到",
-          message: msg ?? "请求的资源不存在",
-          color: "yellow",
-          autoClose: 5000,
-        });
-        break;
-      case 409:
-        notifications.show({
-          title: "资源冲突",
-          message: "请求创建的资源已存在",
-          color: "yellow",
-          autoClose: 5000,
-        });
-        break;
-      case 500:
-        notifications.show({
-          title: "服务器错误",
-          message: "请稍后重试",
-          color: "red",
-          autoClose: 5000,
-        });
-        break;
-      default:
-        break;
-    }
-
+    // other errors: just reject
     return Promise.reject(error);
   }
 );
+
+// ================= Refresh logic =================
+let isRefreshing = false;
+let refreshQueue: ((token: string) => void)[] = [];
+
+const onRefreshed = (token: string) => {
+  refreshQueue.forEach(cb => cb(token));
+  refreshQueue = [];
+};
+
+async function refreshToken(): Promise<string> {
+  const refresh = getRefreshToken();
+  if (!refresh) {
+    throw new Error('no refresh token');
+  }
+
+  const endpoint = API_ENDPOINTS.auth.refresh;
+  const res = await axios.post<APIResponse<{ access_token: string }>>(
+    API_BASE_URL + endpoint.path,
+    {refresh_token: refresh},
+    {
+      headers: {
+        'X-Skip-Auth-Refresh': 'true', // do not retry
+      },
+    }
+  );
+
+  const data = unwrapApiResponse(res.data);
+  const accessToken = data.access_token
+
+  setToken(accessToken);
+  return accessToken;
+}
+
+// ================= Error handling =================
+export function unwrapApiResponse<T>(response: APIResponse<T>): T {
+  if (response.code !== 0 || response.data === null) {
+    throw new Error(response.message || '请求失败');
+  }
+  return response.data;
+}
+
+
+export function handleAxiosError(error: unknown): never {
+  if (axios.isAxiosError(error)) {
+    // Network error (no response)
+    if (error.code === 'ERR_NETWORK') {
+      throw new Error('无法连接到服务器');
+    }
+
+    // Server responded with non-2xx
+    if (error.response) {
+      const message =
+        error.response.data?.message ||
+        `请求失败（${error.response.status}）`;
+      throw new Error(message);
+    }
+  }
+
+  // Unknown error
+  if (error instanceof Error) {
+    throw error;
+  }
+
+  throw new Error('未知错误');
+}
 
 
 export default api;

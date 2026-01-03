@@ -91,8 +91,8 @@ export function DatasetDetailPage() {
   const fetchDataset = useCallback(async () => {
     setLoadingDataset(true);
     try {
-      const resp = await DatasetService.list_datasets({_id: datasetId});
-      setDataset(resp.data.items?.[0] || null);
+      const data = await DatasetService.list_datasets({_id: datasetId});
+      setDataset(data.items?.[0] || null);
     } finally {
       setLoadingDataset(false);
     }
@@ -111,16 +111,16 @@ export function DatasetDetailPage() {
     }
 
     try {
-      const resp = await DatasetService.list_documents(datasetId, params);
+      const data = await DatasetService.list_documents(datasetId, params);
 
-      const items = resp.data.items || [];
-      const total = resp.data.total || items.length || 0;
+      const items = data.items || [];
+      const total = data.total || items.length || 0;
       const pages = Math.ceil(total / pageSize);
       setTotalPages(pages);
 
       if (!finalSearchText && items.length === 0 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
-        return; // 等 useEffect 监听 currentPage 来重新调用 fetchDocuments
+        return;
       }
 
       setDocuments(items);
@@ -156,28 +156,26 @@ export function DatasetDetailPage() {
       let successCount = 0;
       let failCount = 0;
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      await Promise.all(files.map(async (file) => {
         const key = getFileKey(file);
         try {
-          const uploadedDoc = await DatasetService.uploadDocument(datasetId!, file);
+          const uploadedDocs = await DatasetService.uploadDocument(datasetId!, file);
           setUploadStatusMap(prev => ({...prev, [key]: "success"}));
           successCount++;
 
           // 如果勾选了“创建时解析”，立即解析该文档
-          const uploadDocId = uploadedDoc.data?.[0]?.id;
+          const uploadDocId = uploadedDocs[0]?.id;
           if (autoParse && uploadDocId) {
-            // 解析单个文档
             await DatasetService.parseDocuments(datasetId!, [uploadDocId]);
           }
-
         } catch {
           setUploadStatusMap(prev => ({...prev, [key]: "error"}));
           failCount++;
+        } finally {
+          setUploadDone(prev => prev + 1);
+          setUploadSuccess(successCount);
         }
-        setUploadDone(i + 1);
-        setUploadSuccess(successCount);
-      }
+      }));
 
       await fetchDocuments();
 
@@ -202,7 +200,6 @@ export function DatasetDetailPage() {
 
     setDeleting(true);
     try {
-      // 如果勾选了“同时删除切片”，先调用删除 chunk 接口
       if (deleteChunks) {
         await Promise.all(
           deleteDocIds.map(docId => DatasetService.deleteChunks(datasetId, docId)),
@@ -210,12 +207,10 @@ export function DatasetDetailPage() {
       }
 
       // 调用删除文档接口
-      const resp = await DatasetService.deleteDocuments(datasetId, deleteDocIds);
-      if (resp.code === 0) {
-        await fetchDocuments();
-        setDeleteModalOpened(false);
-        setDeleteDocIds([]);
-      }
+      await DatasetService.deleteDocuments(datasetId, deleteDocIds);
+      await fetchDocuments();
+      setDeleteModalOpened(false);
+      setDeleteDocIds([]);
     } finally {
       setDeleting(false);
     }
@@ -226,10 +221,8 @@ export function DatasetDetailPage() {
   const handleParse = useCallback(async () => {
     if (!datasetId || parseDocIds.length === 0) return;
     setParsing(true)
-    const resp = await DatasetService.parseDocuments(datasetId, parseDocIds)
-    if (resp.code === 0) {
-      await fetchDocuments();
-    }
+    await DatasetService.parseDocuments(datasetId, parseDocIds)
+    await fetchDocuments();
     setParseDocIds([])
     setParsing(false)
   }, [datasetId, fetchDocuments, parseDocIds]);
@@ -412,7 +405,11 @@ export function DatasetDetailPage() {
         {(docs) => (
           <Box px="md">
             <Table.ScrollContainer mt="md" maxHeight={900} minWidth={562} mih={566}>
-              <Table highlightOnHover miw={800} verticalSpacing="sm">
+              <Table highlightOnHover miw={800} verticalSpacing="sm" styles={{
+                td: {
+                  whiteSpace: 'nowrap',
+                },
+              }}>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th style={{whiteSpace: "nowrap", overflow: "hidden",}}>文档名</Table.Th>
@@ -439,9 +436,9 @@ export function DatasetDetailPage() {
                           <Text>{doc.name}</Text>
                         </Group></Table.Td>
                       <Table.Td>{formatShanghaiTime(doc.create_date)}</Table.Td>
-                      <Table.Td miw="50">{(doc.size / 1024).toFixed(2)} KB</Table.Td>
-                      <Table.Td miw="50">{doc.chunk_count > 0 ? doc.chunk_count : '-'}</Table.Td>
-                      <Table.Td miw="50">
+                      <Table.Td>{(doc.size / 1024).toFixed(2)} KB</Table.Td>
+                      <Table.Td>{doc.chunk_count > 0 ? doc.chunk_count : '-'}</Table.Td>
+                      <Table.Td>
                         <Badge variant="light" color={statusMap[doc.run]?.color}>
                           {statusMap[doc.run]?.label}
                         </Badge>
@@ -482,7 +479,6 @@ export function DatasetDetailPage() {
                 </Table.Tbody>
               </Table>
             </Table.ScrollContainer>
-
 
             <Group display="center" mt="md">
               <Pagination

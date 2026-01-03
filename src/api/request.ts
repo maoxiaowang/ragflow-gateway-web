@@ -1,87 +1,28 @@
-import axios, {type AxiosRequestConfig} from "axios";
-import type {APIPaginatedResult, APIResponse, APIResult, PaginatedContent} from "./types";
-import api from "./axios";
+import type {AxiosRequestConfig} from "axios";
+import type {APIResponse, PaginatedContent} from "./types";
+import api, {handleAxiosError, unwrapApiResponse} from "./axios";
 
 
-// ================= 通用 API 调用封装 =================
+// ================= API Call function =================
 export async function fetchApi<T>(
   config: AxiosRequestConfig
-): Promise<APIResult<T | null>> {
+): Promise<T> {
   try {
-    const res = await api.request<APIResponse<T | null>>(config);
-    const response = res.data;
-
-    if (!response) {
-      return {
-        code: -1,
-        message: '无返回数据',
-        data: null,
-      };
-    }
-
-    return {
-      code: response.code,
-      message: response.message,
-      data: response.data ?? null,
-    };
+    const res = await api.request<APIResponse<T>>(config);
+    return unwrapApiResponse(res.data);
   } catch (error) {
-    return handleAxiosError(error);
+    throw handleAxiosError(error);
   }
 }
 
-// ================= 分页 API 调用封装 =================
+// ================= Paginated API Call function =================
 export async function fetchPaginatedApi<T>(
   config: AxiosRequestConfig
-): Promise<APIPaginatedResult<T>> {
+): Promise<PaginatedContent<T>> {
   try {
-    const res = await api.request<APIResponse<PaginatedContent<T> | null>>(config);
-    const response = res.data;
-
-    if (response?.code === 0 && response.data) {
-      return {
-        code: 0,
-        message: response.message,
-        data: response.data,
-      };
-    }
-
-    return {
-      code: response?.code ?? -1,
-      message: response?.message ?? '请求失败',
-      data: emptyPage<T>(),
-    };
+    const res = await api.request<APIResponse<PaginatedContent<T>>>(config);
+    return unwrapApiResponse(res.data);
   } catch (error) {
-    return {
-      ...handleAxiosError(error),
-      data: emptyPage<T>(),
-    };
+    throw handleAxiosError(error);
   }
-}
-
-
-function emptyPage<T>(): PaginatedContent<T> {
-  return {
-    total: 0,
-    page: 1,
-    page_size: 0,
-    items: [],
-  };
-}
-
-// ================= AxiosError 统一处理 =================
-function handleAxiosError<T = null>(error: unknown): APIResult<T> {
-  if (axios.isAxiosError(error)) {
-    if (error.code === 'ERR_NETWORK') {
-      return { code: -1, message: '无法连接到服务器', data: null as T };
-    }
-
-    if (error.response) {
-      return {
-        code: error.response.status,
-        message: error.response.data?.message ?? '请求失败',
-        data: null as T,
-      };
-    }
-  }
-  return { code: -1, message: '网络异常', data: null as T };
 }

@@ -3,26 +3,26 @@ import {useMemo} from "react";
 
 export function useNotification() {
   return useMemo(() => ({
-    success: (title: string, content: string) => {
+    success: (title: string, content?: string) => {
       notifications.show({
         autoClose: 3000,
-        message: content,
+        message: content ?? '',
         title: title,
-        color: "teal",
+        color: 'teal',
       });
     },
-    error: (title: string, content: string) => {
+    error: (title: string, content?: string) => {
       notifications.show({
         autoClose: 5000,
-        message: content,
+        message: content ?? '',
         title: title,
-        color: "red",
+        color: 'red',
       });
     },
-    info: (title: string, content: string) => {
+    info: (title: string, content?: string) => {
       notifications.show({
         autoClose: 3000,
-        message: content,
+        message: content ?? '',
         title: title,
       });
     },

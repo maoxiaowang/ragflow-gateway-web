@@ -1,19 +1,23 @@
 import {useEffect, useMemo, useState} from 'react';
 import {
   ActionIcon,
-  Avatar, Badge,
+  Alert,
+  Avatar,
+  Badge,
+  Box,
   Button,
-  Center,
   Checkbox,
   Group,
-  Loader,
   Menu,
   Modal,
+  NativeSelect,
   Pagination,
-  ScrollArea,
+  PasswordInput,
+  Stack,
   Table,
   Text,
-  TextInput
+  TextInput,
+  useMantineTheme
 } from '@mantine/core';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import cx from 'clsx';
@@ -22,13 +26,27 @@ import {Breadcrumbs} from "@/layouts/breadcrums/Breadcrumbs";
 import {RoleService, UserService} from "@/moudules/iam/service";
 import type {PaginatedContent} from "@/api/types";
 import type {Role, User} from "@/moudules/iam/types";
-import {IconDots, IconKey, IconLockAccessOff, IconPlus, IconShield, IconTrash, IconUserPlus} from "@tabler/icons-react";
+import {
+  IconAlertCircle,
+  IconChevronDown,
+  IconDots,
+  IconKey,
+  IconLockAccess,
+  IconLockAccessOff,
+  IconPlus,
+  IconTrash,
+  IconUserPlus
+} from "@tabler/icons-react";
 import {DataLoaderArray} from "@/components/common/Loader.tsx";
+import {CounterButton} from "@/components/button/CounterButton.tsx";
+import {formatShanghaiTime} from "@/utils/tz.ts";
+import {useNotification} from "@/hooks/useNotification.tsx";
 
-export function UserListPage() {
+function UserListPage() {
   const [selection, setSelection] = useState<number[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
+  const notify = useNotification();
 
   // --- modals ---
   const [assignRoleModalOpened, setAssignRoleModalOpened] = useState(false);
@@ -44,14 +62,15 @@ export function UserListPage() {
   }
   const [newUserForm, setNewUserForm] = useState(defaultUserForm);
 
-  const [resetPwdModalOpened, setResetPwdModalOpened] = useState(false);
-  const [resetPwdUserId, setResetPwdUserId] = useState<number | null>(null);
+  // const [resetPwdModalOpened, setResetPwdModalOpened] = useState(false);
+  // const [resetPwdUserId, setResetPwdUserId] = useState<number | null>(null);
 
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [deleteUserIds, setDeleteUserIds] = useState<number[]>([]);
 
-  const [disableModalOpened, setDisableModalOpened] = useState(false);
-  const [disableUserIds, setDisableUserIds] = useState<number[]>([]);
+  const [changeStatusModalOpened, setChangeStatusModalOpened] = useState(false);
+  const [statusUserIds, setStatusUserIds] = useState<number[]>([]);
+  const [statusValue, setStatusValue] = useState(true); // true: 激活, false: 禁用
 
   const queryClient = useQueryClient();
 
@@ -61,17 +80,18 @@ export function UserListPage() {
   const {data: userResp, isLoading} = useQuery<PaginatedContent<User>>({
     queryKey: ['users', page, pageSize],
     queryFn: async () => {
-      const res = await UserService.listUsers(page, pageSize);
-      return res.data;
+      return await UserService.listUsers(page, pageSize); // 返回完整对象
     },
   });
 
-  const users = useMemo(() => userResp?.items ?? [], [userResp?.items]);
+  const users = useMemo(() => userResp?.items ?? [], [userResp]);
   const total = userResp?.total ?? 0;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setSelection((current) => current.filter((id) => users.some(u => u.id === id)));
+      setSelection((current) =>
+        current.filter((id) => users.some((u) => u.id === id))
+      );
     }, 0);
     return () => clearTimeout(timeout);
   }, [users]);
@@ -79,16 +99,15 @@ export function UserListPage() {
   const allSelected = users.length > 0 && selection.length === users.length;
   const partiallySelected = selection.length > 0 && selection.length < users.length;
 
-  // 角色列表
+// ======================= roles =======================
   const {data: roleResp} = useQuery<PaginatedContent<Role>>({
     queryKey: ['roles'],
     queryFn: async () => {
-      const res = await RoleService.listRoles();
-      return res.data;
+      return await RoleService.listRoles();
     },
   });
 
-  const roleItems = roleResp?.items ?? [];
+  const roleItems = useMemo(() => roleResp?.items ?? [], [roleResp]);
 
   /* ======================= mutations ======================= */
 
@@ -131,22 +150,47 @@ export function UserListPage() {
     },
   });
 
-  const disableUsersMutation = useMutation({
-    mutationFn: async ({userIds, disable}: { userIds: number[]; disable: boolean }) => {
-      return UserService.disableUsers(userIds, disable);
+  // 禁用用户
+  const changeUserStatusMutation = useMutation({
+    mutationFn: async ({userIds, disable}: { userIds: number[], disable: boolean }) => {
+      return UserService.disableUsers(userIds, disable); // 后端接口复用
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['users'],
-      });
-      setDisableModalOpened(false);
-      setDisableUserIds([]);
+      await queryClient.invalidateQueries({queryKey: ['users']});
+      notify.success('操作成功');
+    },
+    onError: async (err) => {
+      notify.error("操作失败", err.message ?? "未知错误");
+    },
+    onSettled: () => {
+      setChangeStatusModalOpened(false);
+      setStatusUserIds([]);
       setSelection([]);
     }
   });
 
+  // 删除用户
+  const deleteUsersMutation = useMutation({
+    mutationFn: async (userIds: number[]) => {
+      if (userIds.length === 1) {
+        await UserService.deleteUser(userIds[0]);
+      } else if (userIds.length > 1) {
+        await UserService.deleteUsers(userIds);
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({queryKey: ['users']});
+      setDeleteModalOpened(false);
+      setDeleteUserIds([]);
+      setSelection([]);
+    },
+  });
 
-  /* ======================= handlers ======================= */
+  const openDeleteModal = (userIds: number[]) => {
+    setDeleteUserIds(userIds);
+    setDeleteModalOpened(true);
+  };
+
 
   const toggleRow = (id: number) => {
     setSelection((current) =>
@@ -160,8 +204,7 @@ export function UserListPage() {
     setCurrentUserIds(userIds);
     if (userIds.length === 1) {
       const res = await UserService.listUserRoles(userIds[0]);
-      const roleIds =
-        res.data?.map((r: Role) => r.id) ?? [];
+      const roleIds = res?.map((r: Role) => r.id) ?? [];
       setSelectedRoles(roleIds);
     } else {
       setSelectedRoles([]);
@@ -169,21 +212,16 @@ export function UserListPage() {
     setAssignRoleModalOpened(true);
   };
 
-  const openDisableModal = (userIds: number[]) => {
-    setDisableUserIds(userIds);
-    setDisableModalOpened(true);
+  const openChangeStatusModal = (userIds: number[], currentStatus?: boolean) => {
+    setStatusUserIds(userIds);
+    setStatusValue(currentStatus !== undefined ? !currentStatus : false);
+    setChangeStatusModalOpened(true);
   };
 
-  /* ======================= render ======================= */
+  const theme = useMantineTheme();
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 'calc(85vh - 30px)',
-      }}
-    >
+    <>
       <Breadcrumbs
         items={[
           {label: 'Home', href: '/'},
@@ -195,26 +233,27 @@ export function UserListPage() {
         {selection.length > 0 && (
           <Menu shadow="md" width={220}>
             <Menu.Target>
-              <Button size="sm">批量操作 ({selection.length})</Button>
+              <CounterButton leftSection={selection.length} rightSection={<IconChevronDown size={18}/>}>
+                批量操作
+              </CounterButton>
             </Menu.Target>
 
             <Menu.Dropdown>
               <Menu.Item
-                leftSection={<IconUserPlus size={16}/>}
+                leftSection={<IconUserPlus size={18} color={theme.colors.blue[6]}/>}
                 onClick={() => openAssignRolesModal(selection)}
               >
                 分配角色
               </Menu.Item>
               <Menu.Item
-                leftSection={<IconLockAccessOff size={16}/>}
-                onClick={() => openDisableModal(selection)}
+                leftSection={<IconLockAccessOff size={18} color={theme.colors.blue[6]}/>}
+                onClick={() => openChangeStatusModal(selection)}
               >
-                禁用
+                更改状态
               </Menu.Item>
               <Menu.Divider/>
-                            <Menu.Item
-                leftSection={<IconTrash size={16}/>}
-                color="red"
+              <Menu.Item
+                leftSection={<IconTrash size={18} color={theme.colors.red[6]}/>}
                 onClick={() => openDeleteModal(selection)}
               >
                 删除
@@ -239,9 +278,14 @@ export function UserListPage() {
         minHeight="50vh"
       >
         {(data) => (
-          <>
-            <ScrollArea>
-              <Table verticalSpacing="sm">
+          <Box px="md">
+            <Table.ScrollContainer mt="md" maxHeight={900} minWidth={562} mih={580}>
+              <Table highlightOnHover
+                     verticalSpacing="sm"
+                     stickyHeader
+                     styles={{
+                       td: {whiteSpace: 'nowrap'},
+                     }}>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th w={40}>
@@ -257,14 +301,13 @@ export function UserListPage() {
                         }}
                       />
                     </Table.Th>
-                    <Table.Th>ID</Table.Th>
-                    <Table.Th>用户名</Table.Th>
-                    <Table.Th>昵称</Table.Th>
-                    <Table.Th>状态</Table.Th>
-                    <Table.Th>超级管理员</Table.Th>
-                    <Table.Th>创建于</Table.Th>
-                    <Table.Th>更新于</Table.Th>
-                    <Table.Th w={60}>操作</Table.Th>
+                    <Table.Th w={80}>ID</Table.Th>
+                    <Table.Th miw={220}>用户名</Table.Th>
+                    <Table.Th miw={120}>昵称</Table.Th>
+                    <Table.Th miw={120}>状态</Table.Th>
+                    <Table.Th miw={180}>创建于</Table.Th>
+                    <Table.Th miw={180}>更新于</Table.Th>
+                    <Table.Th miw={80}>操作</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
 
@@ -282,24 +325,24 @@ export function UserListPage() {
                       </Table.Td>
                       <Table.Td>{user.id}</Table.Td>
                       <Table.Td>
-                        <Group gap="sm">
+                        <Group gap="sm" wrap="nowrap">
                           <Avatar size={26} src={user.avatar} radius={26}/>
-                          <span>{user.username}</span>
+                          <Text truncate>{user.username}</Text>
+                          {user.is_superuser && (
+                            <Badge color="teal" size="xs" variant="light">
+                              超管
+                            </Badge>
+                          )}
                         </Group>
                       </Table.Td>
                       <Table.Td>{user.nickname || "-"}</Table.Td>
                       <Table.Td>
-                        <Badge color={user.is_active ? "green" : "gray"} variant="light">
+                        <Badge color={user.is_active ? "blue" : "gray"} variant="light">
                           {user.is_active ? "正常" : "禁用"}
                         </Badge>
                       </Table.Td>
-                      <Table.Td>
-                        <Badge color={user.is_superuser ? "blue" : "gray"} variant="light">
-                          {user.is_superuser ? "是" : "否"}
-                        </Badge>
-                      </Table.Td>
-                      <Table.Td>{user.created_at}</Table.Td>
-                      <Table.Td>{user.updated_at}</Table.Td>
+                      <Table.Td>{formatShanghaiTime(user.created_at)}</Table.Td>
+                      <Table.Td>{formatShanghaiTime(user.updated_at)}</Table.Td>
                       <Table.Td>
                         <Menu shadow="md" width={180}>
                           <Menu.Target>
@@ -309,16 +352,24 @@ export function UserListPage() {
                           </Menu.Target>
                           <Menu.Dropdown>
                             <Menu.Item
-                              leftSection={<IconShield size={16}/>}
+                              leftSection={<IconUserPlus size={18} color={theme.colors.blue[6]}/>}
                               onClick={() => openAssignRolesModal([user.id])}
                             >
                               分配角色
                             </Menu.Item>
-                            <Menu.Item leftSection={<IconKey size={16}/>}>
+                            <Menu.Item
+                              leftSection={user.is_active ?
+                                <IconLockAccessOff size={18} color={theme.colors.blue[6]}/> :
+                                <IconLockAccess size={18} color={theme.colors.blue[6]}/>}
+                              onClick={() => openChangeStatusModal([user.id], user.is_active)}
+                            >
+                              {user.is_active ? '禁用账号' : '激活账号'}
+                            </Menu.Item>
+                            <Menu.Item leftSection={<IconKey size={16} color={theme.colors.blue[6]}/>} disabled>
                               重置密码
                             </Menu.Item>
                             <Menu.Divider/>
-                            <Menu.Item leftSection={<IconTrash size={16}/>} color="red">
+                            <Menu.Item leftSection={<IconTrash size={16} color={theme.colors.red[6]}/>}>
                               删除
                             </Menu.Item>
                           </Menu.Dropdown>
@@ -328,14 +379,39 @@ export function UserListPage() {
                   ))}
                 </Table.Tbody>
               </Table>
-            </ScrollArea>
+            </Table.ScrollContainer>
 
+            {/*<Pagination*/}
+            {/*  value={page}*/}
+            {/*  onChange={setPage}*/}
+            {/*  total={Math.ceil(total / pageSize)}*/}
+            {/*  style={{marginTop: 'auto'}}*/}
+            {/*/>*/}
+            <Group justify="space-between" mt="md">
+              <Pagination
+                value={page}
+                onChange={setPage}
+                total={Math.ceil(total / pageSize)}
+              />
 
-          </>
+              <Group gap="xs">
+                <Text size="sm">每页显示</Text>
+                <NativeSelect
+                  data={[5, 10, 20, 50].map((n) => ({value: n.toString(), label: n.toString()}))}
+                  value={pageSize.toString()}
+                  onChange={(e) => {
+                    setPageSize(Number(e.currentTarget.value));
+                    setPage(1); // 调整页码到第一页
+                  }}
+                  size="sm"
+                />
+              </Group>
+            </Group>
+          </Box>
         )}
       </DataLoaderArray>
 
-      {/* ======================= Assign Roles Modal ======================= */}
+      {/* Assign Roles Modal */}
       <Modal
         opened={assignRoleModalOpened}
         onClose={() => setAssignRoleModalOpened(false)}
@@ -396,10 +472,9 @@ export function UserListPage() {
           onChange={(e) => setNewUserForm(f => ({...f, username: e.target.value}))}
           mb="sm"
         />
-        <TextInput
+        <PasswordInput
           label="密码"
           placeholder="请输入密码"
-          type="password"
           value={newUserForm.password}
           onChange={(e) => setNewUserForm(f => ({...f, password: e.target.value}))}
           mb="sm"
@@ -408,7 +483,7 @@ export function UserListPage() {
           label="昵称"
           value={newUserForm.nickname}
           onChange={(e) =>
-            setNewUserForm((f) => ({...f, nickname: e.currentTarget.value}))
+            setNewUserForm((f) => ({...f, nickname: e.target.value}))
           }
           mb="sm"
         />
@@ -417,7 +492,7 @@ export function UserListPage() {
           label="是否激活"
           checked={newUserForm.is_active}
           onChange={(e) =>
-            setNewUserForm((f) => ({...f, is_active: e.currentTarget.checked}))
+            setNewUserForm((f) => ({...f, is_active: e.target.checked}))
           }
           mb="sm"
         />
@@ -438,26 +513,75 @@ export function UserListPage() {
         </Group>
       </Modal>
 
-      {/* Disable user modal */}
+      {/* Change Status Modal */}
       <Modal
-        opened={disableModalOpened}
-        onClose={() => setDisableModalOpened(false)}
-        title="禁用用户"
+        opened={changeStatusModalOpened}
+        onClose={() => setChangeStatusModalOpened(false)}
+        title="更改用户状态"
         centered
       >
-        <Text>确定要禁用选中的 {disableUserIds.length} 个用户吗？</Text>
+        <Text>选择新的用户状态（共 {statusUserIds.length} 个用户）:</Text>
+        <NativeSelect
+          data={[
+            {value: 'true', label: '激活'},
+            {value: 'false', label: '禁用'},
+          ]}
+          value={statusValue.toString()}
+          onChange={(e) => setStatusValue(e.currentTarget.value === 'true')}
+          mt="sm"
+        />
         <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={() => setDisableModalOpened(false)}>取消</Button>
+          <Button variant="default" onClick={() => setChangeStatusModalOpened(false)}>取消</Button>
           <Button
-            color="red"
+            color={statusValue ? 'blue' : 'red'}
             onClick={() =>
-              disableUsersMutation.mutate({userIds: disableUserIds, disable: true})
+              changeUserStatusMutation.mutate({userIds: statusUserIds, disable: !statusValue})
             }
           >
             确认
           </Button>
         </Group>
       </Modal>
-    </div>
+
+      {/* Delete user modal */}
+      <Modal
+        opened={deleteModalOpened}
+        onClose={() => setDeleteModalOpened(false)}
+        title="删除用户"
+        size="sm"
+        centered
+      >
+        <Stack gap="md">
+          <Text mt={10}>
+            确定要删除选中的 <Text fw={700} span>{deleteUserIds.length}</Text> 个用户吗？
+          </Text>
+
+          <Alert
+            variant="light"
+            color="red"
+            title="警告"
+            icon={<IconAlertCircle size={20}/>}
+            styles={{root: {padding: '12px 16px', fontSize: 14}}}
+          >
+            用户相关数据都会被删除，删除后无法恢复
+          </Alert>
+
+          <Group justify="right" gap="sm" mt="md">
+            <Button variant="default" onClick={() => setDeleteModalOpened(false)}>
+              取消
+            </Button>
+            <Button
+              color="red"
+              loading={deleteUsersMutation.isPending}
+              onClick={() => deleteUsersMutation.mutate(deleteUserIds)}
+            >
+              删除
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </>
   );
 }
+
+export default UserListPage

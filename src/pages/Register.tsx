@@ -41,15 +41,16 @@ export default function Register() {
   useEffect(() => {
     let mounted = true;
     setRulesLoaded(false);
-    AuthService.getPasswordRules().then((res) => {
+    try {
+      AuthService.getPasswordRules().then((data) => {
       if (!mounted) return;
-      if (res?.code === 0 && res.data) {
-        setRules(res.data);
-      } else {
-        setRules(DEFAULT_RULES);
-      }
+      setRules(data);
       setRulesLoaded(true);
     });
+    } catch {
+      setRules(DEFAULT_RULES);
+    }
+
     return () => {
       mounted = false;
     };

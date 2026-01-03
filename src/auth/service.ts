@@ -1,39 +1,36 @@
 import {fetchApi} from '@/api/request';
 import type {LoginParams, LoginResponse, RegisterParams, RegisterResponse, PasswordRules} from "@/auth/types.ts";
 import {API_ENDPOINTS} from "@/api";
-import type {APIResult} from "@/api/types";
 
 
 export const AuthService = {
-  login(params: LoginParams): Promise<APIResult<LoginResponse | null>> {
+  login(params: LoginParams): Promise<LoginResponse> {
     const endpoint = API_ENDPOINTS.auth.login;
     return fetchApi<LoginResponse>({
       url: endpoint.path,
       data: params,
-      method: endpoint.method
+      method: endpoint.method,
     });
   },
 
-  logout() {
-    // 暂时没用
+  logout(): Promise<void> {
     return fetchApi<void>({
       url: API_ENDPOINTS.auth.logout.path,
-      method: 'DELETE'
+      method: 'DELETE',
     });
   },
 
-  register(params: RegisterParams): Promise<APIResult<RegisterResponse | null>> {
-    // 暂时没用
+  register(params: RegisterParams): Promise<RegisterResponse> {
     return fetchApi<RegisterResponse>({
       url: API_ENDPOINTS.auth.register.path,
       data: params,
-      method: 'POST'
-    })
+      method: 'POST',
+    });
   },
 
-  getPasswordRules(): Promise<APIResult<PasswordRules | null>> {
+  getPasswordRules(): Promise<PasswordRules> {
     return fetchApi<PasswordRules>({
-      url: API_ENDPOINTS.auth.getPassRules.path
-    })
-  }
+      url: API_ENDPOINTS.auth.getPassRules.path,
+    });
+  },
 };

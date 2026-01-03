@@ -21,6 +21,12 @@ export const API_ENDPOINTS = {
       }),
       disableUsers: {
         path: `/iam/users/disable`, method: 'POST', label: '禁用用户（支持多个）'
+      },
+      deleteUser: (userId: number) =>({
+        path: `/iam/users/${userId}`, method: 'DELETE', label: '删除用户'
+      }),
+      deleteUsers: {
+        path: '/iam/users', method: 'DELETE', label: '删除用户（多个）'
       }
     },
     role: {

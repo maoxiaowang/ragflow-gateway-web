@@ -1,7 +1,7 @@
 import {fetchApi, fetchPaginatedApi} from '@/api/request';
-import type {CreateUser, Permission, Role, User} from './types';
+import type {CreateUser, DeleteUserResponse, Permission, Role, User} from './types';
 import {API_ENDPOINTS} from '@/api';
-import type {APIPaginatedResult, APIResult} from "@/api/types";
+import type {PaginatedContent} from "@/api/types";
 
 export const UserService = {
   listUsers: (
@@ -9,50 +9,66 @@ export const UserService = {
     page_size = 10,
     order_by?: string,
     desc_order?: boolean
-  ): Promise<APIPaginatedResult<User>> => {
+  ): Promise<PaginatedContent<User>> => {
     const endpoint = API_ENDPOINTS.iam.user.list;
     return fetchPaginatedApi<User>({
       url: endpoint.path,
-      params: {page, page_size, order_by, desc: desc_order},
+      params: { page, page_size, order_by, desc: desc_order },
       method: endpoint.method,
     });
   },
 
-  createUser: (payload: CreateUser): Promise<APIResult<User | null>> => {
+  createUser: (payload: CreateUser): Promise<User> => {
     const endpoint = API_ENDPOINTS.iam.user.create;
     return fetchApi<User>({
       url: endpoint.path,
       method: endpoint.method,
-      data: payload
+      data: payload,
     });
   },
 
-  // 给用户分配角色
-  assignUserRoles: (userId: number, roleIds: number[]): Promise<APIResult<void | null>> => {
+  deleteUser: (id: number): Promise<DeleteUserResponse> => {
+    const endpoint = API_ENDPOINTS.iam.user.deleteUser(id);
+    return fetchApi<DeleteUserResponse>({
+      url: endpoint.path,
+      method: endpoint.method,
+    });
+  },
+
+  deleteUsers: (userIds: number[]): Promise<DeleteUserResponse[]> => {
+    const endpoint = API_ENDPOINTS.iam.user.deleteUsers;
+    return fetchApi<DeleteUserResponse[]>({
+      url: endpoint.path,
+      method: endpoint.method,
+      data: { user_ids: userIds },
+    });
+  },
+
+  assignUserRoles: (userId: number, roleIds: number[]): Promise<void> => {
     const endpoint = API_ENDPOINTS.iam.user.assign_roles(userId);
     return fetchApi<void>({
       url: endpoint.path,
       method: endpoint.method,
-      data: {role_ids: roleIds},
+      data: { role_ids: roleIds },
     });
   },
 
-  disableUsers: (userIds: number[], disable: boolean): Promise<APIResult<void | null>> => {
+  disableUsers: (userIds: number[], disable: boolean): Promise<void> => {
     const endpoint = API_ENDPOINTS.iam.user.disableUsers;
     return fetchApi<void>({
       url: endpoint.path,
       method: endpoint.method,
-      data: {user_ids: userIds, disable: disable},
+      data: { user_ids: userIds, disable },
     });
   },
 
-  listUserRoles: (user_id: number): Promise<APIResult<Role[] | null>> => {
+  listUserRoles: (user_id: number): Promise<Role[]> => {
     const endpoint = API_ENDPOINTS.iam.user.roles(user_id);
     return fetchApi<Role[]>({
       url: endpoint.path,
       method: endpoint.method,
     });
-  }
+  },
 };
 
 export const RoleService = {
@@ -61,20 +77,20 @@ export const RoleService = {
     page_size = 10,
     order_by?: string,
     desc_order?: boolean
-  ): Promise<APIPaginatedResult<Role>> => {
+  ): Promise<PaginatedContent<Role>> => {
     const endpoint = API_ENDPOINTS.iam.role.list;
     return fetchPaginatedApi<Role>({
       url: endpoint.path,
-      params: {page, page_size, order_by, desc: desc_order},
+      params: { page, page_size, order_by, desc: desc_order },
       method: endpoint.method,
     });
   },
 };
 
 export const PermissionService = {
-  listPermissions: (): Promise<APIPaginatedResult<Permission>> => {
+  listPermissions: (): Promise<PaginatedContent<Permission>> => {
     const endpoint = API_ENDPOINTS.iam.permission.list;
-    return fetchPaginatedApi<Role>({
+    return fetchPaginatedApi<Permission>({
       url: endpoint.path,
       method: endpoint.method,
     });
