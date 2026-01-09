@@ -97,11 +97,17 @@ async function refreshToken(): Promise<string> {
 }
 
 // ================= Error handling =================
-export function unwrapApiResponse<T>(response: APIResponse<T>): T {
-  if (response.code !== 0 || response.data === null) {
-    throw new Error(response.message || '请求失败');
+export function unwrapApiResponse<T>(
+  response: APIResponse<T>,
+  allowNullData = false
+): T {
+  if (response.code !== 0) {
+    throw new Error(response.message || '请求失败，响应码异常');
   }
-  return response.data;
+  if (!allowNullData && response.data === null) {
+    throw new Error(response.message || '请求失败，数据异常');
+  }
+  return response.data!;
 }
 
 

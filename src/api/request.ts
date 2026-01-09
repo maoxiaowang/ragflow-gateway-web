@@ -5,11 +5,14 @@ import api, {handleAxiosError, unwrapApiResponse} from "./axios";
 
 // ================= API Call function =================
 export async function fetchApi<T>(
-  config: AxiosRequestConfig
+  config: AxiosRequestConfig,
+  options?: { allowNullData?: boolean }
 ): Promise<T> {
+  const allowNull =
+    options?.allowNullData ?? (config.method?.toUpperCase() === "DELETE");
   try {
     const res = await api.request<APIResponse<T>>(config);
-    return unwrapApiResponse(res.data);
+    return unwrapApiResponse(res.data, allowNull);
   } catch (error) {
     throw handleAxiosError(error);
   }

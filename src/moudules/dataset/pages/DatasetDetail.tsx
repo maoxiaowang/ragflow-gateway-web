@@ -137,7 +137,7 @@ export function DatasetDetailPage() {
 
   const getFileKey = (file: File) => `${file.name}_${file.size}`;
 
-  // ============= 文档解析 ===============
+  // ============= 文档上传 / 解析 ===============
 
   const uploadDocuments = async (files: File[]) => {
     if (files.length === 0) return;
@@ -201,8 +201,8 @@ export function DatasetDetailPage() {
     setDeleting(true);
     try {
       if (deleteChunks) {
-        await Promise.all(
-          deleteDocIds.map(docId => DatasetService.deleteChunks(datasetId, docId)),
+        await Promise.allSettled(
+          deleteDocIds.map(docId => DatasetService.deleteChunks(datasetId, docId))
         );
       }
 

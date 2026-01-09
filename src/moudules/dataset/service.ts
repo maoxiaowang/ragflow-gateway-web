@@ -53,7 +53,7 @@ export const DatasetService = {
       url: endpoint.path,
       method: endpoint.method,
       data: formData,
-    });
+    }, {allowNullData: true});
   },
 
   deleteDocuments: async (
@@ -81,7 +81,7 @@ export const DatasetService = {
       data: {
         document_ids: documentIds,
       },
-    });
+    }, {allowNullData: true});
   },
 
   deleteChunks: async (
